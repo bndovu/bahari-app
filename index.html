@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Bahari Master Interactive Sandbox</title>
+    <style>
+        :root {
+            --primary: #1a365d;
+            --secondary: #2c5282;
+            --accent: #319795;
+            --danger: #e53e3e;
+            --light: #f7fafc;
+            --dark: #2d3748;
+            --success: #38a169;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.4;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 15px auto;
+            padding: 0 15px 40px 15px;
+        }
+
+        .emergency-trigger-btn {
+            background-color: var(--danger);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(229, 62, 62, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Ecosystem Simulator Canvas styling */
+        .sim-canvas-container {
+            position: relative;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #4299e1, #1a365d);
+            width: 100%;
+            height: 220px;
+        }
+
+        .sim-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            background: #2d3748;
+            padding: 10px;
+            color: white;
+            text-align: center;
+            font-size: 0.8rem;
+            border-top: 2px solid var(--accent);
+        }
+
+        .sim-score {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #63b3ed;
+        }
+
+        .control-panel {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .control-row input[type="range"] {
+            width: 60%;
+            accent-color: var(--accent);
+        }
+
+        /* Emergency Component */
+        .emergency-box {
+            display: none;
+            background: #fff5f5;
+            border-left: 5px solid var(--danger);
+        }
+
+        .icon-flow {
+            font-size: 2rem;
+            text-align: center;
+            margin: 10px 0;
+            letter-spacing: 12px;
+        }
+
+        .step-block {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #fed7d7;
+            font-size: 0.85rem;
+        }
+
+        /* Navigation Filters */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-chip {
+            background: #edf2f7;
+            color: var(--dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .filter-chip.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .species-card {
+            display: none;
+        }
+
+        .species-card.active {
+            display: block;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-reef { background: #e2f8ff; color: #2b6cb0; }
+        .badge-mangrove { background: #e6fffa; color: #234e52; }
+        .badge-safety { background: #feebc8; color: #744210; }
+
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .mpa-toggle {
+            background-color: var(--success);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .mpa-toggle.active {
+            background-color: var(--danger);
+        }
+
+        .console-box {
+            background: #1a202c;
+            color: #f7fafc;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 style="margin:0; font-size: 1.6rem;">PROJECT BAHARI</h1>
+        <p style="margin:3px 0 0 0; font-size: 0.85rem; opacity: 0.9; font-style: italic;">
+            "Kujua mazingira ni kuyalinda"
+        </p>
+    </header>
+
+    <div class="container">
+
+        <!-- Visual Sandbox Component -->
+        <div class="card" style="padding: 10px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 1rem; color: var(--primary);">Interactive Tidal Pool Simulator</h3>
+            
+            <div class="sim-canvas-container">
+                <canvas id="poolCanvas"></canvas>
+                <div class="sim-dashboard">
+                    <div>Ecosystem Health<br><span id="healthDisplay" class="sim-score">100%</span></div>
+                    <div>Fish Community<br><span id="fishDisplay" class="sim-score">30</span></div>
+                    <div>Local Revenue<br><span id="revDisplay" class="sim-score" style="color: #48bb78;">$500/mo</span></div>
+                </div>
+            </div>
+
+            <!-- Environmental Variables Input Panel -->
+            <div class="control-panel">
+                <div class="control-row">
+                    <label>🎣 Uvuvi (Fishing Pressure):</label>
+                    <input type="range" id="fishSlider" min="0" max="100" value="20" oninput="updateSimulation()">
+                </div>
+                <div class="control-row">
+                    <label>🪨 Matope (Sedimentation):</label>
+                    <input type="range" id="sedSlider" min="0" max="100" value="10" oninput="updateSimulation()">
+                </div>
+                <div class="control-row" style="margin-bottom: 0; margin-top: 10px; padding-top: 8px; border-top: 1px solid #cbd5e0;">
+                    <label>🛡️ Marine Protected Area (MPA):</label>
+                    <button id="mpaBtn" class="mpa-toggle" onclick="toggleMPA()">Washa (Activate)</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="emergency-trigger-btn" onclick="openEmergencyPortal()">
+            🚨 HUDUMA YA KWANZA (EMERGENCY)
+        </button>
+
+        <!-- Emergency Component -->
+        <div id="emergencyPortal" class="card emergency-box">
+            <h2 style="color: var(--danger); margin-top: 0; font-size: 1.2rem;">⚠️ Mfumo wa Dharura</h2>
+            
+            <div class="step-block">
+                <strong>HATUA YA 1: TOKA MAJINI</strong>
+                <div class="icon-flow">🧎‍♂️ 🌊 ➔ 🏝️</div>
+            </div>
+
+            <div class="step-block">
+                <strong>HATUA YA 2: KAGUA JEREHA[cite: 1]</strong>
+                <div class="icon-flow">👀 ➔ 🪡 ➔ ❌</div>
+            </div>
+
+            <div class="step-block" style="border-bottom: 3px solid var(--danger);">
+                <strong>HATUA YA 3: WEKA KWENYE MAJI YA MOTO (♨️ 45°C)[cite: 1]</strong>
+                <div class="icon-flow">🦶 ➔ 🪣</div>
+                <p style="margin:5px 0 0 0; font-size: 0.8rem; color: #742a2a;">Loweka jeraha kwenye maji ya MOTO kwa dakika 30-90 ili kuvunja sumu ya samaki[cite: 1].</p>
+            </div>
+            <button class="btn-action" style="background: #4a5568;" onclick="closeEmergencyPortal()">Funga Dirisha</button>
+        </div>
+
+        <!-- Navigation Filters -->
+        <div class="filter-bar">
+            <button class="filter-chip active" id="chip-all" onclick="filterCategory('all')">Zote[cite: 1]</button>
+            <button class="filter-chip" id="chip-reef" onclick="filterCategory('reef')">🪸 Tumbawe[cite: 1]</button>
+            <button class="filter-chip" id="chip-mangrove" onclick="filterCategory('mangrove')">🦀 Mikoko[cite: 1]</button>
+        </div>
+
+        <!-- Content Collection -->
+        <div id="content-container">
+            <div class="card species-card reef all">
+                <span class="badge badge-reef">🪸 Coral Reef[cite: 1]</span>
+                <h2 style="margin: 5px 0; color: var(--primary); font-size: 1.2rem;">Pongoo (Parrotfish)[cite: 1]</h2>
+                <p style="font-size:0.85rem; margin: 0 0 10px 0;">Hula mwani unaosonga na kusafisha miamba yetu. Kila samaki hutoa kilo 90 za mchanga mweupe kila mwaka[cite: 1]!</p>
+                <button class="btn-action" onclick="adoptParcel('Pongoo Reef Block-A4')">Adopt Habitat Coordinate ($10)[cite: 1]</button>
+            </div>
+
+            <div class="card species-card mangrove all">
+                <span class="badge badge-mangrove">🦀 Mangrove Forest[cite: 1]</span>
+                <h2 style="margin: 5px 0; color: var(--primary); font-size: 1.2rem;">Kaa Koko (Mangrove Crab)[cite: 1]</h2>
+                <p style="font-size:0.85rem; margin: 0 0 10px 0;">Huingiza hewa ya oksijeni chini ya udongo wa mikoko ili miche iweze kukua imara[cite: 1].</p>
+                <button class="btn-action" onclick="adoptParcel('Kaa Koko Mud-M12')">Adopt Habitat Coordinate ($10)[cite: 1]</button>
+            </div>
+        </div>
+
+        <!-- Logic Emulation Console -->
+        <div class="card" style="background: #2d3748; border: none; padding: 12px;">
+            <h3 style="color: white; margin:0; font-size: 0.9rem;">🖥️ Backend Class Logic Stream[cite: 1]</h3>
+            <div id="consoleLog" class="console-box">[System State]: Framework initializing...</div>
+        </div>
+
+    </div>
+
+    <script>
+        // Simulation Animation Engine Variables
+        const canvas = document.getElementById('poolCanvas');
+        const ctx = canvas.getContext('2d');
+        let mpaActive = false;
+        let particles = [];
+        let fishArray = [];
+
+        // Initialize simulation items
+        for(let i=0; i<30; i++) {
+            fishArray.push({
+                x: Math.random() * 400, y: 50 + Math.random() * 120,
+                speed: 0.5 + Math.random() * 1, size: 4 + Math.random() * 6,
+                dir: Math.random() > 0.5 ? 1 : -1, color: `hsl(${Math.random() * 360}, 80%, 60%)`
+            });
+        }
+        for(let i=0; i<40; i++) {
+            particles.push({ x: Math.random() * 400, y: Math.random() * 220, speed: 0.2 + Math.random()*0.5 });
+        }
+
+        function drawSimulation() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let sedVal = document.getElementById('sedSlider').value;
+            let fishSliderVal = document.getElementById('fishSlider').value;
+
+            // Set dynamic marine water coloring based on sedimentation slider
+            let waterColor = `rgba(26, 86, 157, ${1 - (sedVal/130)})`;
+            ctx.fillStyle = waterColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if(sedVal > 10) {
+                ctx.fillStyle = `rgba(139, 94, 60, ${sedVal/150})`; // Silt overlay
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Draw Corals on seabed floor (Grey out if silt is high)
+            let reefColor = `hsl(340, ${100 - sedVal}%, ${50 + parseInt(sedVal/4)}%)`;
+            ctx.fillStyle = reefColor;
+            ctx.beginPath();
+            for(let i=0; i<canvas.width; i+=40) {
+                ctx.arc(i, 210, 25 - (sedVal/6), 0, Math.PI, true);
+            }
+            ctx.fill();
+
+            // Render swimming fish matching current allowable counts
+            let allowedFish = Math.max(2, Math.floor(30 - (fishSliderVal * 0.28) - (sedVal * 0.1)));
+            document.getElementById('fishDisplay').innerText = allowedFish;
+
+            for(let i=0; i<allowedFish; i++) {
+                let f = fishArray[i];
+                f.x += f.speed * f.dir;
+                if(f.x > canvas.width + 20) f.x = -10;
+                if(f.x < -20) f.x = canvas.width + 10;
+
+                ctx.fillStyle = sedVal > 60 ? '#718096' : f.color;
+                ctx.beginPath();
+                ctx.ellipse(f.x, f.y, f.size * 1.5, f.size, 0, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            // Render floating dirt silt elements if sedimentation is elevated
+            if(sedVal > 20) {
+                ctx.fillStyle = "rgba(226, 210, 180, 0.6)";
+                for(let i=0; i<Math.floor(sedVal/2); i++) {
+                    let p = particles[i];
+                    p.y += p.speed;
+                    if(p.y > canvas.height) p.y = 0;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 1.5, 0, 2*Math.PI);
+                    ctx.fill();
+                }
+            }
+
+            requestAnimationFrame(drawSimulation);
+        }
+
+        function updateSimulation() {
+            let sedVal = parseInt(document.getElementById('sedSlider').value);
+            let fishVal = parseInt(document.getElementById('fishSlider').value);
+            
+            // Mathematical calculations mapping variables directly to ecosystem indicators
+            let health = Math.max(0, 100 - Math.floor(fishVal*0.5) - Math.floor(sedVal*0.6));
+            if(mpaActive) health = Math.min(100, health + 25);
+            
+            let revenue = Math.floor(500 * (health/100));
+
+            document.getElementById('healthDisplay').innerText = health + "%";
+            document.getElementById('revDisplay').innerText = "$" + revenue + "/mo";
+            
+            if(health < 40) {
+                document.getElementById('healthDisplay').style.color = "var(--danger)";
+            } else {
+                document.getElementById('healthDisplay').style.color = "#63b3ed";
+            }
+        }
+
+        function toggleMPA() {
+            mpaActive = !mpaActive;
+            let btn = document.getElementById('mpaBtn');
+            if(mpaActive) {
+                btn.innerText = "Zima (Active)";
+                btn.classList.add('active');
+                document.getElementById('fishSlider').value = 5;
+                document.getElementById('sedSlider').value = 5;
+                updateSimulation();
+                logToConsole("[MPA Active]: Legal zoning applied. Fishing limited. Habitat recovery initiated.");
+            } else {
+                btn.innerText = "Washa (Activate)";
+                btn.classList.remove('active');
+                logToConsole("[MPA Terminated]: Protection zone lifted.");
+            }
+        }
+
+        // Standard App UI Handlers
+        function filterCategory(cat) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            document.getElementById('chip-' + cat).classList.add('active');
+            document.querySelectorAll('.species-card').forEach(card => {
+                if(cat === 'all' || card.classList.contains(cat)) card.classList.add('active');
+                else card.classList.remove('active');
+            });
+        }
+
+        function openEmergencyPortal() {
+            document.getElementById('emergencyPortal').style.display = 'block';
+            document.getElementById('emergencyPortal').scrollIntoView({ behavior: 'smooth' });
+        }
+        function closeEmergencyPortal() { document.getElementById('emergencyPortal').style.display = 'none'; }
+
+        function adoptParcel(id) {
+            logToConsole(`[Transaction Executed]:<br>↳ Object Model: TidalPool (ID: ${id})<br>↳ Status updated to "SPONSORED".`);
+            alert("Safi sana! You adopted block: " + id);
+        }
+
+        function logToConsole(msg) { document.getElementById('consoleLog').innerHTML = msg; }
+
+        // Start animation loop and set sizing
+        canvas.width = 400;
+        canvas.height = 220;
+        filterCategory('all');
+        updateSimulation();
+        drawSimulation();
+    </script>
+</body>
+</html>
